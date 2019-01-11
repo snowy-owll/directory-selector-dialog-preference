@@ -1,12 +1,11 @@
 package com.ls.directoryselector;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.TextUtils;
@@ -15,139 +14,157 @@ import android.view.View;
 
 import java.io.File;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
+
 public class DirectoryDialog extends DialogFragment {
 
-	public interface Listener {
-		void onDirectorySelected(File dir);
-		void onCancelled();
-	}
+    public interface Listener {
+        void onDirectorySelected(File dir);
 
-	private static final String INITIAL_DIR_KEY = "initial_dir";
-	private static final String SELECTED_DIR_KEY = "selected_dir";
-	private static final int CREATE_DIR_CODE = 1000;
+        void onCancelled();
+    }
 
-	private final DirectorySelector.Callback dirSelectorCallback = new DirectorySelector.Callback() {
-		@Override
-		public void onNewDirButtonClicked() {
-			EditTextDialog dialog = EditTextDialog.newInstance(DirectoryDialog.this, CREATE_DIR_CODE,
-					getString(R.string.create_folder), getString(R.string.create_folder_msg));
-			dialog.show(getFragmentManager(), "createDirDialog");
-		}
-	};
+    private static final String INITIAL_DIR_KEY = "initial_dir";
+    private static final String SELECTED_DIR_KEY = "selected_dir";
+    private static final int CREATE_DIR_CODE = 1000;
 
-	private final DirectorySelector dirChooser = new DirectorySelector(dirSelectorCallback) {
-		@Override
-		protected Context getContext() {
-			return getActivity();
-		}
+    private final DirectorySelector.Callback dirSelectorCallback = new DirectorySelector.Callback() {
+        @Override
+        public void onNewDirButtonClicked() {
+            EditTextDialog dialog = EditTextDialog.newInstance(DirectoryDialog.this, CREATE_DIR_CODE,
+                    getString(R.string.create_folder), getString(R.string.create_folder_msg));
+            dialog.show(getFragmentManager(), "createDirDialog");
+        }
+    };
 
-		@Override
-		protected File getInitialDirectory() {
-			return Environment.getExternalStorageDirectory();
-		}
-	};
+    private final DirectorySelector dirChooser = new DirectorySelector(dirSelectorCallback) {
+        @Override
+        protected Context getContext() {
+            return getActivity();
+        }
 
-	private Listener listener;
-	private String selectedDir;
+        @Override
+        protected File getInitialDirectory() {
+            return Environment.getExternalStorageDirectory();
+        }
+    };
 
-	public DirectoryDialog() {
-	}
+    private Listener listener;
+    private String selectedDir;
 
-	public static DirectoryDialog newInstance(String initialDirectory) {
-		DirectoryDialog ret = new DirectoryDialog();
-		Bundle args = new Bundle();
-		args.putString(INITIAL_DIR_KEY, initialDirectory);
-		ret.setArguments(args);
-		return ret;
-	}
+    public DirectoryDialog() {
+    }
 
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
+    public static DirectoryDialog newInstance(String initialDirectory) {
+        DirectoryDialog ret = new DirectoryDialog();
+        Bundle args = new Bundle();
+        args.putString(INITIAL_DIR_KEY, initialDirectory);
+        ret.setArguments(args);
+        return ret;
+    }
 
-		File selectedDir = dirChooser.getSelectedDir();
-		if (selectedDir != null) {
-			outState.putString(SELECTED_DIR_KEY, selectedDir.getPath());
-		}
-	}
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+        File selectedDir = dirChooser.getSelectedDir();
+        if (selectedDir != null) {
+            outState.putString(SELECTED_DIR_KEY, selectedDir.getPath());
+        }
+    }
 
-		selectedDir = null;
-		if (getArguments() != null) {
-			selectedDir = getArguments().getString(INITIAL_DIR_KEY);
-		}
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-		if (savedInstanceState != null) {
-			selectedDir = savedInstanceState.getString(SELECTED_DIR_KEY);
-		}
-	}
+        selectedDir = null;
+        if (getArguments() != null) {
+            selectedDir = getArguments().getString(INITIAL_DIR_KEY);
+        }
 
-	@Override
-	public Dialog onCreateDialog(Bundle savedInstanceState) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
-				.setPositiveButton(android.R.string.ok,
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int whichButton) {
-								if (listener != null) listener.onDirectorySelected(dirChooser.getSelectedDir());
-							}
-						}
-				)
-				.setNegativeButton(android.R.string.cancel,
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int whichButton) {
-								if (listener != null) listener.onCancelled();
-							}
-						}
-				);
+        if (savedInstanceState != null) {
+            selectedDir = savedInstanceState.getString(SELECTED_DIR_KEY);
+        }
+    }
 
-		LayoutInflater inflater = getActivity().getLayoutInflater();
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
+                .setPositiveButton(android.R.string.ok,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                if (listener != null)
+                                    listener.onDirectorySelected(dirChooser.getSelectedDir());
+                            }
+                        }
+                )
+                .setNegativeButton(android.R.string.cancel,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                if (listener != null) listener.onCancelled();
+                            }
+                        }
+                );
 
-		View view = inflater.inflate(dirChooser.getViewResId(), null);
-		dirChooser.initViews(view);
-		if (!TextUtils.isEmpty(selectedDir)) dirChooser.setSelectedDir(selectedDir);
+        LayoutInflater inflater = getActivity().getLayoutInflater();
 
-		builder.setView(view);
+        View view = inflater.inflate(dirChooser.getViewResId(), null);
+        dirChooser.initViews(view);
+        if (!TextUtils.isEmpty(selectedDir)) dirChooser.setSelectedDir(selectedDir);
 
-		return builder.create();
-	}
+        builder.setView(view);
 
-	@Override
-	public void onAttach(Activity activity) {
-		super.onAttach(activity);
-		if (activity instanceof Listener) listener = (Listener) activity;
-	}
+        return builder.create();
+    }
 
-	@Override
-	public void onDetach() {
-		super.onDetach();
-		listener = null;
-	}
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (context instanceof Listener) listener = (Listener) context;
+        }
+    }
 
-	@Override
-	public void onPause() {
-		super.onPause();
-		dirChooser.onPause();
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onAttach(@NonNull Activity activity) {
+        super.onAttach(activity);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            if (activity instanceof Listener) listener = (Listener) activity;
+        }
+    }
 
-	@Override
-	public void onResume() {
-		super.onResume();
-		dirChooser.onResume();
-	}
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
+    }
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		switch (requestCode) {
-			case CREATE_DIR_CODE:
-				if ((resultCode == Activity.RESULT_OK) && (data != null)) {
-					String value = data.getStringExtra(EditTextDialog.EDIT_VALUE_KEY);
-					dirChooser.createFolder(value);
-				}
-				break;
-		}
-	}
+    @Override
+    public void onPause() {
+        super.onPause();
+        dirChooser.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        dirChooser.onResume();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case CREATE_DIR_CODE:
+                if ((resultCode == Activity.RESULT_OK) && (data != null)) {
+                    String value = data.getStringExtra(EditTextDialog.EDIT_VALUE_KEY);
+                    dirChooser.createFolder(value);
+                }
+                break;
+        }
+    }
 }

@@ -1,7 +1,7 @@
 ![demo](images/demo.gif)
 
 # Description
-The project contains an Android library which provides directory selection functionality using **DialogFragment** and **DialogPreference** and a Demo application.
+The project contains an Android library which provides directory selection functionality using **DialogFragment**, **PreferenceDialogFragmentCompat** and **DialogPreference** and a Demo application.
 
 ## How to use
 Import the library into your project and use it in the following ways:
@@ -9,7 +9,7 @@ Import the library into your project and use it in the following ways:
 1. Implement **DirectoryDialog.Listener** interface in your activity:
  
  ```java
-public class MainActivity extends Activity implements DirectoryDialog.Listener {
+public class MainActivity extends AppCompatActivity implements DirectoryDialog.Listener {
 
 	  @Override
 	  public void onDirectorySelected(File dir) {
@@ -26,7 +26,7 @@ public class MainActivity extends Activity implements DirectoryDialog.Listener {
  
  ```java
 DialogFragment dialog = DirectoryDialog.newInstance(settings.getStorePath());
-dialog.show(getFragmentManager(), "directoryDialog");
+dialog.show(getSupportFragmentManager(), "directoryDialog");
 ```
 
 ### Using **DialogPreference**
@@ -34,13 +34,15 @@ dialog.show(getFragmentManager(), "directoryDialog");
  
  ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <com.ls.directoryselector.DirectoryPreference
             android:key="store_path"
             android:title="@string/dir_location"
             android:summary="Path"
             android:positiveButtonText="@android:string/ok"
-            android:negativeButtonText="@android:string/cancel" />
+            android:negativeButtonText="@android:string/cancel"
+            app:iconSpaceReserved="false" />
 </PreferenceScreen>
 ```
 2. Implement your custom **PreferenceActivity** activity which will use our preference file and open it when needed (most likely on menu item click). Refer to **SettingsActivity** in Demo application for example. Note how the preference "summary" is updating there.
@@ -51,3 +53,5 @@ The project is available under MIT license. See the file **license** with the fu
 
 ## Compatibility
 Minimum SDK version is 14.
+
+Compile SDK version is 28.

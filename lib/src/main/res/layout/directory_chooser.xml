@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
@@ -16,8 +17,8 @@
                 android:layout_height="wrap_content"
                 android:padding="16dp"
                 android:contentDescription="@string/up"
-                android:background="?android:attr/selectableItemBackground"
-                android:src="@drawable/navigation_up"/>
+                android:background="?attr/selectableItemBackground"
+                app:srcCompat="@drawable/navigation_up"/>
 
         <LinearLayout
                 android:orientation="vertical"
@@ -52,8 +53,8 @@
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
                 android:contentDescription="@string/create_folder"
-                android:background="?android:attr/selectableItemBackground"
-                android:src="@drawable/ic_action_create"/>
+                android:background="?attr/selectableItemBackground"
+                app:srcCompat="@drawable/ic_action_create"/>
 
     </LinearLayout>
 

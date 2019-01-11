@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <com.ls.directoryselector.DirectoryPreference
-            android:key="store_path"
-            android:title="@string/dir_location"
-            android:summary="Path"
-            android:positiveButtonText="@android:string/ok"
-            android:negativeButtonText="@android:string/cancel" />
+        android:key="store_path"
+        android:negativeButtonText="@android:string/cancel"
+        android:positiveButtonText="@android:string/ok"
+        android:summary="Path"
+        android:title="@string/dir_location"
+        app:iconSpaceReserved="false" />
 </PreferenceScreen>

@@ -1,100 +1,163 @@
 package com.ls.directoryselectordemo;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
 import android.view.MenuItem;
+import android.widget.Toast;
 
-public class SettingsActivity extends PreferenceActivity {
+import com.ls.directoryselector.DirectoryPreference;
+import com.ls.directoryselector.DirectoryPreferenceDialogFragmentCompat;
+import com.ls.directoryselectordemo.utils.PermissionUtils;
 
-	public static void startThisActivity(Context context) {
-		Intent intent = new Intent(context, SettingsActivity.class);
-		context.startActivity(intent);
-	}
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
 
-	public static void startThisActivityForResult(Activity activity, int requestCode) {
-		Intent intent = new Intent(activity, SettingsActivity.class);
-		activity.startActivityForResult(intent, requestCode);
-	}
+public class SettingsActivity extends AppCompatActivity {
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		//addPreferencesFromResource(R.xml.preferences);
-		if (savedInstanceState == null) {
-			getFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
-		}
-		initActionBar();
-	}
+    private final static String DIALOG_FRAGMENT_TAG = "androidx.preference.PreferenceFragment.DIALOG";
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getItemId() == android.R.id.home) {
-			finish();
-			return true;
-		}
+    public static void startThisActivity(Context context) {
+        Intent intent = new Intent(context, SettingsActivity.class);
+        context.startActivity(intent);
+    }
 
-		return false;
-	}
+    public static void startThisActivityForResult(AppCompatActivity activity, int requestCode) {
+        Intent intent = new Intent(activity, SettingsActivity.class);
+        activity.startActivityForResult(intent, requestCode);
+    }
 
-	public static class MyPreferenceFragment extends PreferenceFragment {
-		private AppSettings settings;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        //addPreferencesFromResource(R.xml.preferences);
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
+        }
+        initActionBar();
+    }
 
-		@Override
-		public void onCreate(final Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.preferences);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
 
-			Preference storePathPrefs = findPreference("store_path");
-			storePathPrefs.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-				@Override
-				public boolean onPreferenceChange(Preference preference, Object newValue) {
-					preference.setSummary((String) newValue);
-					return true;
-				}
-			});
-		}
+        return false;
+    }
 
-		@Override
-		public void onActivityCreated(Bundle savedInstanceState) {
-			super.onActivityCreated(savedInstanceState);
-			settings = AppSettings.getSettings(getActivity());
+    public static class MyPreferenceFragment extends PreferenceFragmentCompat {
+        private static final int REQUEST_READWRITE_STORAGE = 0;
 
-			Preference storePathPrefs = findPreference("store_path");
-			storePathPrefs.setSummary(settings.getStorePath());
-		}
+        private String preferenceDialogKey;
+        private AppSettings settings;
 
-		@Override
-		public void onPause() {
-			super.onPause();
-			getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(sharedPrefsChangeListener);
-		}
+        @Override
+        public void onCreate(final Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.preferences);
 
-		@Override
-		public void onResume() {
-			super.onResume();
-			getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(sharedPrefsChangeListener);
-		}
+            Preference storePathPrefs = findPreference("store_path");
+            storePathPrefs.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    preference.setSummary((String) newValue);
+                    return true;
+                }
+            });
+        }
 
-		private final SharedPreferences.OnSharedPreferenceChangeListener sharedPrefsChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-			@Override
-			public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-				settings.load();
-			}
-		};
-	}
+        @Override
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
 
-	private void initActionBar() {
-		ActionBar actionBar = getActionBar();
-		if (actionBar != null) {
-			actionBar.setHomeButtonEnabled(true);
-			actionBar.setDisplayHomeAsUpEnabled(true);
-		}
-	}
+        }
+
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+            settings = AppSettings.getSettings((AppCompatActivity) getActivity());
+
+            Preference storePathPrefs = findPreference("store_path");
+            storePathPrefs.setSummary(settings.getStorePath());
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(sharedPrefsChangeListener);
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(sharedPrefsChangeListener);
+        }
+
+        @Override
+        public void onDisplayPreferenceDialog(Preference preference) {
+            DialogFragment dialogFragment = null;
+            if (preference instanceof DirectoryPreference) {
+                if (PermissionUtils.checkExternalStoragePermission(getContext())) {
+                    dialogFragment = newDirectoryPreferenceDialog(preference.getKey());
+                } else {
+                    preferenceDialogKey = preference.getKey();
+                    PermissionUtils.requestExternalStoragePermission(this);
+                    return;
+                }
+            }
+            if (dialogFragment != null) {
+                showPreferenceDialog(dialogFragment);
+            } else {
+                super.onDisplayPreferenceDialog(preference);
+            }
+        }
+
+        @Override
+        public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+            if (requestCode == REQUEST_READWRITE_STORAGE) {
+                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    Toast.makeText(getContext(), getString(R.string.permission_granted), Toast.LENGTH_LONG).show();
+                    if (preferenceDialogKey == null) {
+                        return;
+                    }
+                    showPreferenceDialog(newDirectoryPreferenceDialog(preferenceDialogKey));
+                    preferenceDialogKey = null;
+                } else {
+                    Toast.makeText(getContext(), getString(R.string.permission_denied), Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+
+        private final SharedPreferences.OnSharedPreferenceChangeListener sharedPrefsChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                settings.load();
+            }
+        };
+
+        private void showPreferenceDialog(DialogFragment dialogFragment) {
+            dialogFragment.setTargetFragment(this, 0);
+            dialogFragment.show(this.getFragmentManager(), DIALOG_FRAGMENT_TAG);
+        }
+
+        private DialogFragment newDirectoryPreferenceDialog(String key) {
+            return DirectoryPreferenceDialogFragmentCompat
+                    .newInstance(key);
+        }
+    }
+
+    private void initActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+    }
 }

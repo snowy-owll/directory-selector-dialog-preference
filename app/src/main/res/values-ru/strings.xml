@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Directory Selector Demo</string>
+
+    <string name="action_settings">Настройки</string>
+    <string name="dir_location">Папка</string>
+    <string name="change_dir">Изменить папку</string>
+    <string name="permission_granted">Разрешение получено</string>
+    <string name="permission_denied">Разрешение не получено. Разрешение должно быть получено для правильной работы приложения</string>
+</resources>
